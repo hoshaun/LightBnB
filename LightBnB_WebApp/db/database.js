@@ -161,10 +161,31 @@ const getAllProperties = function (options, limit = 10) {
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function (property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  const queryParams = [];
+  let queryString = `INSERT INTO properties (`;
+
+  for (const key in property) {
+    queryString += `${key},`;
+    queryParams.push(property[key]);
+  }
+
+  queryString = `${queryString.slice(0, queryString.length - 1)}) VALUES (
+  `;
+
+  for (let i in queryParams) {
+    queryString += `$${Number(i) + 1},`;
+  }
+  queryString = `${queryString.slice(0, queryString.length - 1)}) RETURNING *`;
+  
+  return pool
+    .query(queryString, queryParams)
+    .then((result) => {
+      console.log(result.rows);
+      return result.rows;
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 };
 
 module.exports = {
